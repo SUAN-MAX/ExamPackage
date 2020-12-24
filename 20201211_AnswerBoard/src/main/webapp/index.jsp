@@ -9,5 +9,6 @@
 <body>
 <a href="./BoardList.do">게시판으로 이동</a><br>
 <a href="./signIn.do">로그인 창으로 이동</a>
+<div>안녕하세요</div>
 </body>
 </html>
