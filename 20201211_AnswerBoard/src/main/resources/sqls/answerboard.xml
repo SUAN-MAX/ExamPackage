@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.min.edu.model.answerboard.mapper">
+
+	<select id="selectAll" resultType="ADto">
+		SELECT SEQ, ID, TITLE, CONTENT, REFER, STEP, "DEPTH", READCOUNT, DELFLAG, REGDATE
+		FROM ANSWERBOARD
+		ORDER BY REFER DESC, STEP
+	</select>
+	
+  <select id="selectDetailBoard" parameterType="java.lang.String" resultType="ADto">
+    SELECT SEQ, ID, TITLE, CONTENT, REFER, STEP, DEPTH, REGDATE, DELFLAG, READCOUNT
+ 	 FROM ANSWERBOARD
+  	  WHERE SEQ=#{seq}
+  </select>
+  
+  <insert id="replyInsert" parameterType="ADto">
+    INSERT INTO ANSWERBOARD(SEQ, ID, TITLE,
+      CONTENT, REFER,
+      STEP, 
+      DEPTH, REGDATE, DELFLAG, READCOUNT) 
+   	VALUES(ANSWERBOARD_SEQ.NEXTVAL, #{id}, #{title},
+   	#{content}, (SELECT REFER FROM ANSWERBOARD a WHERE SEQ=#{seq}),
+   	(SELECT STEP FROM ANSWERBOARD a2 WHERE SEQ=#{seq})+1,
+   	(SELECT DEPTH FROM ANSWERBOARD a3 WHERE SEQ=#{seq})+1, SYSDATE, 'N',0)
+   	
+  </insert>
+  
+  <update id="replyBoardUp" parameterType="ADto">
+    UPDATE ANSWERBOARD SET STEP = STEP +1
+	  WHERE REFER =(SELECT REFER FROM ANSWERBOARD a WHERE SEQ=#{seq})
+		AND STEP>(SELECT STEP FROM ANSWERBOARD a2 WHERE SEQ=#{seq})
+  </update>
+  
+  <update id="modifyBoard" parameterType="ADto">
+		UPDATE ANSWERBOARD
+		SET
+		TITLE = #{title}, CONTENT = #{content}
+		WHERE SEQ = #{seq}
+  </update>
+  
+  <update id="delflagBoard" parameterType="java.lang.String">
+		UPDATE ANSWERBOARD SET DELFLAG = 'Y'
+		WHERE DELFLAG = 'N'
+		AND SEQ IN
+		<foreach item="seq" collection="seqs" open="(" separator="," close=")">
+			#{seq}	
+		</foreach>
+  </update>
+  
+  <insert id="insertBoard" parameterType="ADto">
+    INSERT INTO ANSWERBOARD(SEQ, ID, TITLE,
+		CONTENT, REFER,
+		STEP, DEPTH, REGDATE, DELFLAG, READCOUNT)
+		VALUES(ANSWERBOARD_SEQ.NEXTVAL, #{id}, #{title},
+		#{content}, (SELECT NVL(MAX(REFER), 0)+1 FROM ANSWERBOARD),
+		0, 0, SYSDATE, 'N',0)
+	<selectKey keyProperty="seq" resultType="java.lang.String" order="AFTER">
+   		SELECT ANSWERBOARD_SEQ.CURRVAL AS SEQ FROM DUAL
+   	</selectKey>
+  </insert>
+  
+  <delete id="deleteBoardReal" parameterType="java.lang.String">
+    DELETE FROM ANSWERBOARD
+		WHERE SEQ = #{seq}
+  </delete>
+  
+</mapper>
